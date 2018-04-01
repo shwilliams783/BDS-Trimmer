@@ -81,12 +81,12 @@ int main(int argc, char ** argv)
 			if((*edgeIt).originalID == source)
 			{
 				(*edgeIt).edges.push_back(target);
-				std::cout << target << " added to source edge list." << std::endl;
+				//std::cout << target << " added to source edge list." << std::endl;
 			}
 			if((*edgeIt).originalID == target)
 			{
 				(*edgeIt).edges.push_back(source);
-				std::cout << source << " added to target edge list." << std::endl;
+				//std::cout << source << " added to target edge list." << std::endl;
 			}				
 		}
 
@@ -99,8 +99,7 @@ int main(int argc, char ** argv)
 			fscanf(input, "%s", string); // read in string from file
 		}
 		
-		else
-			numEdges++; // count number of edges
+		numEdges++; // count number of edges
 
 		if(numEdges % 10000000 == 0) // message every 10 million edges
 			std::cout << numEdges / 1000000 << " million edges read" << std::endl;
@@ -121,7 +120,9 @@ int main(int argc, char ** argv)
 		
 	} 
 
-	// Node and edge display
+	fclose(input);
+	
+	/* Node and edge display
 	for(nodeIt = nodes.begin(); nodeIt != nodes.end(); nodeIt++)
 	{
 		std::cout << "nodeIt.originalID = " << (*nodeIt).originalID << ", edges: ";
@@ -131,7 +132,7 @@ int main(int argc, char ** argv)
 			std::cout << (*edgeIt) << ", ";
 		}
 		std::cout << std::endl;
-	}
+	}*/
 
 	// Search for nodes containing only one edge
 	int prevNode;
@@ -143,7 +144,7 @@ int main(int argc, char ** argv)
 	{
 		if((*terminalIt).edges.size() == 1) // this is a terminal vertex
 		{
-			std::cout << "Terminal vertex found at ID = " << (*terminalIt).originalID << std::endl;
+			//std::cout << "Terminal vertex found at ID = " << (*terminalIt).originalID << std::endl;
 			prevNode = (*terminalIt).originalID; // store the first ID of the terminal vertex
 			neighbor = (*terminalIt).edges.front(); // the first neighbor will be the ID of the only vertex in the edges list of the terminal vertex
 			
@@ -151,7 +152,7 @@ int main(int argc, char ** argv)
 			targetIt = nodes.begin(); // initialize the target iterator
 			advance(targetIt, neighbor-1); // advance target iterator to the neighbor node in the nodes list
 			
-			std::cout << "BEFORE WHILE targetIt.originalID " << (*targetIt).originalID << " and edges.size() = " << (*targetIt).edges.size() << std::endl;
+			//std::cout << "BEFORE WHILE targetIt.originalID " << (*targetIt).originalID << " and edges.size() = " << (*targetIt).edges.size() << std::endl;
 			
 			// check the number of edges in the neighboring node until a node
 			// with exactly 1 edge, or 3+ edges is found:
@@ -171,7 +172,7 @@ int main(int argc, char ** argv)
 				}
 				targetIt = nodes.begin();
 				advance(targetIt, neighbor-1);
-				std::cout << "targetIt.originalID " << (*targetIt).originalID << " and edges.size() = " << (*targetIt).edges.size() << std::endl;
+				//std::cout << "targetIt.originalID " << (*targetIt).originalID << " and edges.size() = " << (*targetIt).edges.size() << std::endl;
 			}
 			// at this point, there is either a cluster or a linear terminal
 			//at the neighbor vertex
@@ -191,6 +192,7 @@ int main(int argc, char ** argv)
 								cutIt = (*edgeIt).edges.erase(cutIt);
 							}
 						}
+						numEdges--;
 						std::cout << "cut edge from " << neighbor << " to " << prevNode << std::endl;
 					}	
 					else if((*edgeIt).originalID == prevNode)
@@ -203,13 +205,14 @@ int main(int argc, char ** argv)
 								cutIt = (*edgeIt).edges.erase(cutIt);
 							}
 						}
-						std::cout << "cut edge from " << prevNode << " to " << neighbor << std::endl;
+						//std::cout << "cut edge from " << prevNode << " to " << neighbor << std::endl;
 					}	
 				}
+				
 			}
-			std::cout << "end linear trim" << std::endl;
+			//std::cout << "end linear trim" << std::endl;
 			
-			// Node and edge display
+			/* Node and edge display
 			for(nodeIt = nodes.begin(); nodeIt != nodes.end(); nodeIt++)
 			{
 				std::cout << "nodeIt.originalID = " << (*nodeIt).originalID << ", edges: ";
@@ -219,10 +222,31 @@ int main(int argc, char ** argv)
 					std::cout << (*edgeIt) << ", ";
 				}
 				std::cout << std::endl;
-			}
+			}*/
 		}
-		std::cout << "end terminal search iteration" << std::endl;
+		//std::cout << "end terminal search iteration" << std::endl;
 	}
+	
+	// save remaining files in a new .gml file
+	fprintf(output,"Graph with %d nodes and %d edges.\ngraph\n[", numNodes, numEdges);
+	
+	std::list<node_t>::iterator saveIt;
+	for(saveIt = nodes.begin(); saveIt != nodes.end(); saveIt++)
+	{
+		fprintf(output, "\n  node\n  [\n    id %d\n  ]", (*saveIt).originalID);
+	}
+	
+	for(saveIt = nodes.begin(); saveIt != nodes.end(); saveIt++)
+	{
+		std::list<int>::iterator edgeIt;
+		for(edgeIt = (*saveIt).edges.begin(); edgeIt != (*saveIt).edges.end(); edgeIt++)
+		{
+			if((*saveIt).originalID < (*edgeIt))
+				fprintf(output, "\n  edge\n  [\n    source %d\n    target %d\n  ]", (*saveIt).originalID, (*edgeIt));
+		}
+	}
+	
+	fprintf(output, "\n]\n");
 	
 	
 	return 1;	
